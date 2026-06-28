@@ -1,175 +1,362 @@
-/* Scoped hard to #eps-panel so eBay's global CSS can't bleed in and vice
-   versa. One accent (aqua) carries the "saving" signal; everything else stays
-   quiet so the panel sits beside eBay's UI without fighting it. */
+/* Neobrutalism comparison panel. Scoped hard to #eps-panel so eBay's global
+   CSS can't bleed in and vice versa. The look: thick black outlines, hard
+   offset shadows with no blur, zero radius, and one loud brand accent. Tokens
+   resolve light/dark automatically via prefers-color-scheme — never swap colors
+   by hand. */
 
 #eps-panel {
+  /* color tokens (light) */
+  --eps-bg: #ffffff;
+  --eps-bg-alt: #f5f5f0;
+  --eps-ink: #000000;
+  --eps-body: #5a5a5a;
+  --eps-border: #000000;
+  --eps-brand: #ffdb33;
+  --eps-brand-strong: #ffcc00;
+  --eps-success: #16a34a;
+  --eps-success-soft: #ecfdf5;
+  --eps-success-strong: #15803d;
+  --eps-warning-soft: #fffbeb;
+  --eps-warning-border: #d97706;
+  --eps-warning-ink: #92400e;
+  --eps-disabled: #f5f5f5;
+
+  /* type tokens — declared with strong system fallbacks because the page's CSP
+     may block remote webfonts in a content script. */
+  --eps-font-head: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --eps-font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* hard offset shadows (shadow color == border color) */
+  --eps-shadow-xs: 2px 2px 0 0 var(--eps-border);
+  --eps-shadow-sm: 3px 3px 0 0 var(--eps-border);
+  --eps-shadow-md: 4px 4px 0 0 var(--eps-border);
+  --eps-shadow-lg: 6px 6px 0 0 var(--eps-border);
+  --eps-shadow-xl: 10px 10px 0 1px var(--eps-border);
+
   position: fixed !important;
-  width: 300px;
-  min-width: 260px;
-  max-width: 340px;
+  width: 304px;
+  min-width: 264px;
+  max-width: 344px;
   height: auto !important;
   min-height: 0 !important;
-  max-height: 70vh;
+  max-height: 74vh;
   bottom: auto !important;
   right: auto !important;
   z-index: 2147483646;
   display: flex;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #e8eef2;
-  background: #14202b;
-  border: 1px solid #243646;
-  border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  font-family: var(--eps-font-sans) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: var(--eps-ink) !important;
+  background: var(--eps-bg) !important;
+  border: 2px solid var(--eps-border) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--eps-shadow-xl) !important;
   overflow: hidden;
-  transition: transform 0.18s ease;
+  transition: transform 0.1s ease;
 }
+
+@media (prefers-color-scheme: dark) {
+  #eps-panel {
+    --eps-bg: #1a1a1a;
+    --eps-bg-alt: #242424;
+    --eps-ink: #f5f5f5;
+    --eps-body: #a0a0a0;
+    --eps-border: #f5f5f5;
+    --eps-brand: #ffdb33;
+    --eps-brand-strong: #ffe066;
+    --eps-success: #22c55e;
+    --eps-success-soft: #052e16;
+    --eps-success-strong: #4ade80;
+    --eps-warning-soft: #78350f;
+    --eps-warning-border: #f59e0b;
+    --eps-warning-ink: #fbbf24;
+    --eps-disabled: #242424;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  #eps-panel { transition: none; }
+  #eps-panel,
+  #eps-panel * { transition: none !important; }
 }
 
 #eps-panel * { box-sizing: border-box; }
 
+/* ---- header (drag handle) ---------------------------------------------- */
 #eps-panel .eps-head {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 11px;
-  background: #0e1820;
-  border-bottom: 1px solid #243646;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--eps-brand) !important;
+  color: #000000 !important;
+  border-bottom: 2px solid var(--eps-border) !important;
   cursor: grab;
   flex: 0 0 auto;
   user-select: none;
 }
-#eps-panel.eps-dragging { cursor: grabbing; }
+#eps-panel.eps-dragging,
 #eps-panel.eps-dragging .eps-head { cursor: grabbing; }
-#eps-panel .eps-mark { width: 18px; height: 18px; object-fit: contain; display: block; flex: none; }
+
+#eps-panel .eps-mark {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+  flex: none;
+  border: 2px solid #000000;
+  background: #ffffff;
+}
+
 #eps-panel .eps-title {
-  font-weight: 600;
-  font-size: 12px;
+  font-family: var(--eps-font-head) !important;
+  font-weight: 900;
+  font-size: 12.5px;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #000000 !important;
   flex: 1;
 }
+
+#eps-panel .eps-ver {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  padding: 1px 5px;
+}
+
 #eps-panel .eps-x {
   all: unset;
   cursor: pointer;
-  color: #7d93a3;
-  font-size: 16px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+  font-weight: 900;
   line-height: 1;
-  padding: 2px 4px;
-  border-radius: 4px;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  transition: all 0.1s;
 }
-#eps-panel .eps-x:hover { color: #e8eef2; }
-#eps-panel .eps-x:focus-visible { outline: 2px solid #3fd2c7; }
-
-#eps-panel .eps-ver {
-  font-size: 9.5px;
-  color: #56707f;
-  letter-spacing: 0.03em;
+#eps-panel .eps-x:hover {
+  background: #000000;
+  color: var(--eps-brand);
+}
+#eps-panel .eps-x:focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
 }
 
+/* ---- body -------------------------------------------------------------- */
 #eps-panel .eps-body {
-  padding: 11px;
+  padding: 12px;
   overflow-y: auto;
   flex: 1 1 auto;
+  background: var(--eps-bg) !important;
+}
+#eps-panel .eps-body.eps-muted {
+  color: var(--eps-body) !important;
+  font-weight: 500;
 }
 
+/* eBay-label headline row */
 #eps-panel .eps-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 3px 0;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--eps-bg-alt) !important;
+  border: 2px solid var(--eps-border) !important;
+  box-shadow: var(--eps-shadow-xs);
 }
-#eps-panel .eps-row b { font-weight: 600; }
+#eps-panel .eps-row + .eps-row { margin-top: 8px; }
+#eps-panel .eps-row span { color: var(--eps-body); font-weight: 600; }
+#eps-panel .eps-row b {
+  font-family: var(--eps-font-head) !important;
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--eps-ink);
+}
+#eps-panel .eps-row.eps-muted span,
+#eps-panel .eps-row.eps-muted b { color: var(--eps-body); }
+
+/* section label */
 #eps-panel .eps-sub {
-  margin: 9px 0 4px;
+  margin: 14px 0 8px;
   font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #7d93a3;
+  letter-spacing: 0.08em;
+  color: var(--eps-ink);
+}
+#eps-panel .eps-sub.eps-muted { color: var(--eps-body); font-weight: 600; }
+
+/* rate list */
+#eps-panel .eps-rates {
+  border: 2px solid var(--eps-border);
+  box-shadow: var(--eps-shadow-xs);
+  background: var(--eps-bg);
 }
 #eps-panel .eps-rate {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 4px 0;
-  border-top: 1px solid #1d2c39;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
 }
-#eps-panel .eps-rate span { color: #c4d2dc; padding-right: 8px; }
-#eps-panel .eps-rate b { font-weight: 600; white-space: nowrap; }
+#eps-panel .eps-rate + .eps-rate { border-top: 2px solid var(--eps-border); }
+#eps-panel .eps-rate span { color: var(--eps-body); font-weight: 500; }
+#eps-panel .eps-rate b {
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--eps-ink);
+}
+/* cheapest option — loud brand stripe */
+#eps-panel .eps-rate.eps-best {
+  background: var(--eps-brand) !important;
+}
+#eps-panel .eps-rate.eps-best span,
+#eps-panel .eps-rate.eps-best b { color: #000000 !important; }
+#eps-panel .eps-rate.eps-best b {
+  font-family: var(--eps-font-head) !important;
+  font-weight: 900;
+}
 
-#eps-panel .eps-muted { color: #7d93a3; }
-#eps-panel .eps-spin { color: #7d93a3; font-weight: 500; }
+#eps-panel .eps-muted { color: var(--eps-body); }
+#eps-panel .eps-spin { color: var(--eps-body); font-weight: 600; }
 
+/* savings / parity callouts */
 #eps-panel .eps-save {
-  margin-top: 9px;
-  padding: 7px 9px;
-  background: rgba(63, 210, 199, 0.12);
-  border: 1px solid rgba(63, 210, 199, 0.4);
-  border-radius: 6px;
-  color: #6fe3da;
-  font-weight: 600;
+  margin-top: 12px;
+  padding: 9px 10px;
+  background: var(--eps-success-soft) !important;
+  border: 2px solid var(--eps-success) !important;
+  box-shadow: var(--eps-shadow-xs);
+  color: var(--eps-success-strong) !important;
+  font-weight: 700;
 }
 #eps-panel .eps-even {
-  margin-top: 9px;
-  padding: 7px 9px;
-  color: #9fb0bc;
-  font-size: 12px;
+  margin-top: 12px;
+  padding: 9px 10px;
+  background: var(--eps-bg-alt) !important;
+  border: 2px solid var(--eps-border) !important;
+  box-shadow: var(--eps-shadow-xs);
+  color: var(--eps-ink);
+  font-weight: 600;
+  font-size: 12.5px;
 }
 #eps-panel .eps-warn {
-  margin: 8px 0;
-  color: #e7b96b;
-  font-size: 12px;
+  margin: 10px 0;
+  padding: 9px 10px;
+  background: var(--eps-warning-soft) !important;
+  border: 2px solid var(--eps-warning-border) !important;
+  box-shadow: var(--eps-shadow-xs);
+  color: var(--eps-warning-ink) !important;
+  font-weight: 600;
+  font-size: 12.5px;
 }
 
+/* ---- buttons ----------------------------------------------------------- */
 #eps-panel .eps-btn {
   all: unset;
   display: block;
   width: 100%;
   text-align: center;
-  margin-top: 10px;
-  padding: 8px 10px;
-  background: #3fd2c7;
-  color: #0a1117;
-  font-weight: 600;
-  font-size: 12.5px;
-  border-radius: 6px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--eps-brand) !important;
+  color: #000000 !important;
+  font-family: var(--eps-font-sans) !important;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 2px solid var(--eps-border) !important;
+  box-shadow: var(--eps-shadow-sm);
   cursor: pointer;
+  transition: all 0.1s;
 }
-#eps-panel .eps-btn:hover { background: #54ddd2; }
-#eps-panel .eps-btn:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+#eps-panel .eps-btn:hover {
+  background: var(--eps-brand-strong) !important;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--eps-shadow-md);
+}
+#eps-panel .eps-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--eps-shadow-xs);
+}
+#eps-panel .eps-btn:focus-visible {
+  outline: 3px solid var(--eps-border);
+  outline-offset: 2px;
+}
 
+/* result CTA — dark variant so it reads as the primary action there */
+#eps-panel .eps-link {
+  all: unset;
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #000000 !important;
+  color: #ffffff !important;
+  font-family: var(--eps-font-sans) !important;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 2px solid var(--eps-border) !important;
+  box-shadow: var(--eps-shadow-sm);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+#eps-panel .eps-link:hover {
+  background: #1a1a1a !important;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--eps-shadow-md);
+}
+#eps-panel .eps-link:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--eps-shadow-xs);
+}
+#eps-panel .eps-link:focus-visible {
+  outline: 3px solid var(--eps-border);
+  outline-offset: 2px;
+}
+@media (prefers-color-scheme: dark) {
+  #eps-panel .eps-link {
+    background: #000000 !important;
+    color: #f5f5f5 !important;
+  }
+  #eps-panel .eps-link:hover { background: #2e2e2e !important; }
+}
+
+/* ---- supporting copy --------------------------------------------------- */
 #eps-panel .eps-note {
-  margin-top: 7px;
+  margin-top: 8px;
   font-size: 11px;
-  color: #7d93a3;
-  line-height: 1.35;
+  color: var(--eps-body);
+  line-height: 1.4;
 }
 
 #eps-panel .eps-diag {
-  margin: 8px 0 2px;
-  padding: 6px 8px;
-  background: #0e1820;
-  border-radius: 5px;
+  margin: 12px 0 2px;
+  padding: 8px 10px;
+  background: var(--eps-bg-alt) !important;
+  border: 2px solid var(--eps-border) !important;
   font-size: 10.5px;
-  line-height: 1.5;
-  color: #8aa0ac;
+  line-height: 1.55;
+  color: var(--eps-body);
   font-family: ui-monospace, "SF Mono", Menlo, monospace !important;
 }
-#eps-panel .eps-miss { color: #e7b96b; font-style: normal; }
-
-#eps-panel .eps-link {
-  all: unset;
-  display: inline-block;
-  margin-top: 10px;
-  font-size: 12px;
-  color: #3fd2c7;
-  cursor: pointer;
-}
-#eps-panel .eps-link:hover { text-decoration: underline; }
-#eps-panel .eps-link:focus-visible { outline: 2px solid #3fd2c7; }
+#eps-panel .eps-miss { color: var(--eps-warning-ink); font-weight: 700; font-style: normal; }
 
 /* collapsed: keep the draggable header, hide the rest */
 #eps-panel.eps-collapsed .eps-body { display: none; }

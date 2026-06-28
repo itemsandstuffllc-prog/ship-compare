@@ -309,13 +309,17 @@
     const sorted = [...rates].sort((a, b) => a.totalPrice - b.totalPrice);
     const cheapest = sorted[0];
 
-    const rows = sorted
-      .slice(0, 4)
-      .map((r) => {
-        const tag = r.cubicTier ? ` \u00b7 cubic ${r.cubicTier}` : "";
-        return `<div class="eps-rate"><span>${r.title}${tag}</span><b>${money(r.totalPrice)}</b></div>`;
-      })
-      .join("");
+    const rows =
+      `<div class="eps-rates">` +
+      sorted
+        .slice(0, 4)
+        .map((r, i) => {
+          const tag = r.cubicTier ? ` \u00b7 cubic ${r.cubicTier}` : "";
+          const best = i === 0 ? " eps-best" : "";
+          return `<div class="eps-rate${best}"><span>${r.title}${tag}</span><b>${money(r.totalPrice)}</b></div>`;
+        })
+        .join("") +
+      `</div>`;
 
     let delta = "";
     if (s.ebayCost != null) {
