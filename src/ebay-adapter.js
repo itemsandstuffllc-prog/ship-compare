@@ -45,6 +45,23 @@ EPS.CLASS_LABELS = {
   "02": "UPS 2nd Day Air",
 };
 
+// --- eBay order id ----------------------------------------------------------
+// eBay order/record ids are formatted NN-NNNNN-NNNNN. On the single-label page
+// it sits right in the URL (/ship/single/22-14795-38876); other label surfaces
+// carry it in a query param or somewhere in the rendered page. This is the join
+// key into Pirate Ship's native eBay import, so the panel can hand the seller
+// straight to the matching order instead of a blank ship page.
+EPS.ORDER_ID_RE = /\b\d{2}-\d{5}-\d{5}\b/;
+
+EPS.orderIdFromPage = function () {
+  const fromUrl = (location.href.match(EPS.ORDER_ID_RE) || [])[0];
+  if (fromUrl) return fromUrl;
+  const fromBody = ((document.body && document.body.innerText) || "").match(
+    EPS.ORDER_ID_RE
+  );
+  return fromBody ? fromBody[0] : null;
+};
+
 // --- deep search helpers ----------------------------------------------------
 function walk(obj, visit, depth = 0) {
   if (!obj || typeof obj !== "object" || depth > 8) return;

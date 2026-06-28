@@ -60,6 +60,10 @@
     const cost = EPS.ebayCostFromDom();
     if (cost != null) shipment.ebayCost = cost;
 
+    // The join key into Pirate Ship's native eBay import — lets the handoff land
+    // on this exact order instead of a blank ship page.
+    shipment.orderId = EPS.orderIdFromPage();
+
     // Mirror eBay's signature / liability-coverage selections so the Pirate
     // Ship quote is like-for-like. background.js folds these into the rate.
     shipment.deliveryConfirmation = EPS.signatureFromDom();
@@ -204,7 +208,7 @@
     const x = el.querySelector(".eps-x");
     if (x) x.onclick = () => el.classList.toggle("eps-collapsed");
     const copy = el.querySelector("[data-copy]");
-    if (copy) copy.onclick = () => doCopy(copy);
+    if (copy) copy.onclick = () => handoff(copy);
   }
 
   function renderEmpty() {
@@ -216,11 +220,16 @@
 
   function renderLoading(s) {
     const el = panel();
+    const skRow =
+      `<div class="eps-rate"><span class="eps-sk eps-sk-line"></span><span class="eps-sk eps-sk-price"></span></div>`;
     el.innerHTML =
       header() +
-      `<div class="eps-body">
+      `<div class="eps-body" aria-busy="true">
         <div class="eps-row"><span>eBay label</span><b>${money(s.ebayCost)}</b></div>
-        <div class="eps-row eps-muted"><span>Pirate Ship</span><b class="eps-spin">checking\u2026</b></div>
+        <div class="eps-sub">Pirate Ship postage</div>
+        <div class="eps-rates eps-rates-sk" aria-hidden="true">${skRow.repeat(4)}</div>
+        <div class="eps-sk eps-sk-block" aria-hidden="true"></div>
+        <div class="eps-sr">Checking Pirate Ship rates\u2026</div>
       </div>`;
     wire(el);
   }
@@ -240,14 +249,28 @@
     return lines.join("\n") + (pkg.length ? "\n\n" + pkg.join("\n") : "");
   }
 
+  const PS_IMPORT = "https://ship.pirateship.com/import?search=";
+  const PS_SHIP = "https://ship.pirateship.com/ship";
+
   let pendingCopy = "";
-  function doCopy(btn) {
+  let pendingOrderId = null;
+
+  // With an eBay order id we deep-link into Pirate Ship's eBay-import grid,
+  // already filtered to this order \u2014 the seller clicks "Get Rates" and the
+  // address and order details are pre-filled by PS's native import. Without one
+  // (older label surfaces), fall back to copying the address and opening a
+  // blank ship page.
+  function handoff(btn) {
+    if (pendingOrderId) {
+      window.open(PS_IMPORT + encodeURIComponent(pendingOrderId), "_blank", "noopener");
+      return;
+    }
     navigator.clipboard.writeText(pendingCopy).then(
       () => {
         const old = btn.textContent;
         btn.textContent = "Copied \u2713";
         setTimeout(() => (btn.textContent = old), 1500);
-        window.open("https://ship.pirateship.com/ship", "_blank", "noopener");
+        window.open(PS_SHIP, "_blank", "noopener");
       },
       () => (btn.textContent = "Copy failed")
     );
@@ -255,8 +278,12 @@
 
   function copyBlock(s, label) {
     pendingCopy = clipboardText(s);
+    pendingOrderId = s.orderId || null;
+    const note = pendingOrderId
+      ? "Opens this order in Pirate Ship \u2014 address and order details are filled in by its eBay import."
+      : "Copies the address and opens Pirate Ship. Insurance and signature already match your eBay selections.";
     return `<button class="eps-btn" data-copy>${label}</button>
-      <div class="eps-note">Opens Pirate Ship with this shipment. Insurance and signature already match your eBay selections.</div>`;
+      <div class="eps-note">${note}</div>`;
   }
 
   // One-line summary of the add-ons mirrored from eBay, shown so the quoted
@@ -345,6 +372,7 @@
       </div>`;
     wire(el);
     pendingCopy = clipboardText(s);
+    pendingOrderId = s.orderId || null;
   }
 
   // first pass shortly after load in case data was server-rendered
