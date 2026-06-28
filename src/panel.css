@@ -31,7 +31,9 @@
   --eps-shadow-sm: 3px 3px 0 0 var(--eps-border);
   --eps-shadow-md: 4px 4px 0 0 var(--eps-border);
   --eps-shadow-lg: 6px 6px 0 0 var(--eps-border);
-  --eps-shadow-xl: 10px 10px 0 1px var(--eps-border);
+  /* outer panel shadow stays a hard offset, but see-through so it reads as a
+     cast shadow over the page rather than a solid black slab */
+  --eps-shadow-panel: 6px 6px 0 0 rgba(0, 0, 0, 0.28);
 
   position: fixed !important;
   width: 304px;
@@ -52,7 +54,7 @@
   background: var(--eps-bg) !important;
   border: 2px solid var(--eps-border) !important;
   border-radius: 0 !important;
-  box-shadow: var(--eps-shadow-xl) !important;
+  box-shadow: var(--eps-shadow-panel) !important;
   overflow: hidden;
   transition: transform 0.1s ease;
 }
@@ -88,7 +90,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
   background: var(--eps-brand) !important;
   color: #000000 !important;
   border-bottom: 2px solid var(--eps-border) !important;
@@ -100,13 +104,12 @@
 #eps-panel.eps-dragging .eps-head { cursor: grabbing; }
 
 #eps-panel .eps-mark {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
   display: block;
   flex: none;
-  border: 2px solid #000000;
-  background: #ffffff;
+  background: transparent;
 }
 
 #eps-panel .eps-title {
@@ -157,6 +160,7 @@
 #eps-panel .eps-body {
   padding: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1 1 auto;
   background: var(--eps-bg) !important;
 }
@@ -297,14 +301,16 @@
   outline-offset: 2px;
 }
 
-/* result CTA — dark variant so it reads as the primary action there */
+/* result CTA — dark variant so it reads as the primary action there. Sized to
+   its label and centered rather than stretched full width. */
 #eps-panel .eps-link {
   all: unset;
   display: block;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
+  margin: 12px auto 0;
   text-align: center;
-  margin-top: 12px;
-  padding: 10px 14px;
+  padding: 10px 18px;
   background: #000000 !important;
   color: #ffffff !important;
   font-family: var(--eps-font-sans) !important;

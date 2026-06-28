@@ -191,7 +191,7 @@
   }
 
   function header() {
-    const mark = chrome.runtime.getURL("icons/icon48.png");
+    const mark = chrome.runtime.getURL("icons/icon128.png");
     return `<div class="eps-head">
         <img class="eps-mark" src="${mark}" alt="Items and Stuff" />
         <span class="eps-title">eBay vs Pirate Ship</span>
@@ -341,7 +341,7 @@
         <div class="eps-sub">Pirate Ship postage</div>
         ${rows}
         ${delta}
-        <button class="eps-link" data-copy>Open this shipment in Pirate Ship</button>
+        <button class="eps-link" data-copy>Open in Pirate Ship</button>
       </div>`;
     wire(el);
     pendingCopy = clipboardText(s);
