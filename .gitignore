@@ -1,0 +1,8 @@
+# Local editor / tooling config (not part of the extension)
+.claude/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

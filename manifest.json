@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "eBay \u2194 Pirate Ship Compare",
+  "version": "0.2.0",
+  "description": "Compares the eBay label price against live Pirate Ship postage on the shipping-label page, with a one-click handoff to confirm insurance and signature savings.",
+  "permissions": ["clipboardWrite", "storage"],
+  "host_permissions": [
+    "https://ship.pirateship.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.ebay.com/sh/lbl*",
+        "https://www.ebay.com/ship*",
+        "https://www.ebay.com/sl/prnt*",
+        "https://www.ebay.com/sl/*label*"
+      ],
+      "js": ["src/interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.ebay.com/sh/lbl*",
+        "https://www.ebay.com/ship*",
+        "https://www.ebay.com/sl/prnt*",
+        "https://www.ebay.com/sl/*label*"
+      ],
+      "js": ["src/ebay-adapter.js", "src/content.js"],
+      "css": ["src/panel.css"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/icon48.png", "icons/icon128.png"],
+      "matches": ["https://www.ebay.com/*"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
