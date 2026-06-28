@@ -20,6 +20,7 @@
   --eps-warning-border: #d97706;
   --eps-warning-ink: #92400e;
   --eps-disabled: #f5f5f5;
+  --eps-sk-sheen: rgba(0, 0, 0, 0.09);
 
   /* type tokens — declared with strong system fallbacks because the page's CSP
      may block remote webfonts in a content script. */
@@ -75,12 +76,13 @@
     --eps-warning-border: #f59e0b;
     --eps-warning-ink: #fbbf24;
     --eps-disabled: #242424;
+    --eps-sk-sheen: rgba(255, 255, 255, 0.12);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #eps-panel,
-  #eps-panel * { transition: none !important; }
+  #eps-panel * { transition: none !important; animation: none !important; }
 }
 
 #eps-panel * { box-sizing: border-box; }
@@ -235,6 +237,56 @@
 
 #eps-panel .eps-muted { color: var(--eps-body); }
 #eps-panel .eps-spin { color: var(--eps-body); font-weight: 600; }
+
+/* ---- skeleton loader --------------------------------------------------- */
+/* Mirrors the result layout (rate list + a footer callout block) so the panel
+   doesn't jump when real rates land. Hard-edged bars with a sweeping sheen keep
+   the neobrutalism feel — no soft pulsing. */
+@keyframes eps-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+#eps-panel .eps-sk {
+  display: block;
+  height: 13px;
+  border-radius: 0;
+  background-color: var(--eps-bg-alt);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--eps-sk-sheen) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: eps-shimmer 1.2s linear infinite;
+}
+#eps-panel .eps-rates-sk .eps-rate { padding: 9px 10px; }
+#eps-panel .eps-sk-line { width: 70%; }
+#eps-panel .eps-rates-sk .eps-rate:nth-child(2) .eps-sk-line { width: 55%; }
+#eps-panel .eps-rates-sk .eps-rate:nth-child(3) .eps-sk-line { width: 80%; }
+#eps-panel .eps-rates-sk .eps-rate:nth-child(4) .eps-sk-line { width: 48%; }
+#eps-panel .eps-sk-price { width: 46px; flex: none; }
+#eps-panel .eps-sk-block {
+  height: 38px;
+  margin-top: 12px;
+  border: 2px solid var(--eps-border);
+  box-shadow: var(--eps-shadow-xs);
+}
+
+/* screen-reader-only status text */
+#eps-panel .eps-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 
 /* savings / parity callouts */
 #eps-panel .eps-save {
