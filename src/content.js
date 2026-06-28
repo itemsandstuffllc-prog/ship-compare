@@ -212,6 +212,23 @@
     if (x) x.onclick = () => el.classList.toggle("eps-collapsed");
     const copy = el.querySelector("[data-copy]");
     if (copy) copy.onclick = () => handoff(copy);
+    const bump = el.querySelector("[data-bump]");
+    if (bump) {
+      const go = () => {
+        const oz = Number(bump.getAttribute("data-bump"));
+        if (oz > 0 && EPS.setWeightDom(oz)) {
+          lastShipmentKey = null; // force a fresh quote at the new weight
+          schedule();
+        }
+      };
+      bump.onclick = go;
+      bump.onkeydown = (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          go();
+        }
+      };
+    }
   }
 
   function renderEmpty() {
@@ -361,14 +378,19 @@
   }
 
   // USPS Ground Advantage weight-band quirk: declaring a heavier weight can be
-  // cheaper. Shown only when it beats the current best rate.
+  // cheaper. Shown only when it beats the current best rate. Clicking it writes
+  // the bumped weight back into eBay's form, which re-quotes and also carries
+  // through to the Pirate Ship prefill.
   function hackBlock(weightHack, cheapest) {
     if (!weightHack || weightHack.price >= cheapest.totalPrice - 0.005) return "";
     const saving = cheapest.totalPrice - weightHack.price;
-    return `<div class="eps-hack">
-        <span class="eps-hack-tag">USPS trick</span>
-        Mark it <b>${lbLabel(weightHack.toOz)}</b> for Ground Advantage at
-        ${money(weightHack.price)} <span class="eps-hack-save">— save ${money(saving)}</span>
+    const w = lbLabel(weightHack.toOz);
+    return `<div class="eps-hack" role="button" tabindex="0" data-bump="${weightHack.toOz}"
+        aria-label="Set the eBay weight to ${w} to save ${money(saving)} on Ground Advantage">
+        <span class="eps-hack-tag"><span class="eps-spark">✨</span> Bump &amp; Save</span>
+        Mark it <b>${w}</b> for Ground Advantage at ${money(weightHack.price)}
+        <span class="eps-hack-save">— save ${money(saving)}</span>
+        <span class="eps-hack-cta">Tap to set eBay weight to ${w} →</span>
       </div>`;
   }
 

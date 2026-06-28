@@ -365,6 +365,33 @@ EPS.insuredValueFromDom = function () {
   );
 };
 
+// Write a weight (in ounces) back into eBay's label form, split into the lb/oz
+// inputs. eBay's fields are framework-controlled, so a plain value assignment is
+// dropped — set via the native setter, then dispatch ONLY an "input" event.
+// eBay maps input->onChange; dispatching "change"/"blur" too re-enters its
+// handler and kicks off an infinite oz<->total reconciliation loop.
+function setInput(el, value) {
+  const proto =
+    el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(proto, "value").set;
+  setter.call(el, value);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+EPS.setWeightDom = function (oz) {
+  const lb = Math.floor(oz / 16);
+  const rem = Math.round((oz - lb * 16) * 10) / 10;
+  const lbEl = document.querySelector('input[aria-label="Package weight in pounds"]');
+  const ozEl = document.querySelector('input[aria-label="Package weight in ounces"]');
+  if (!lbEl && !ozEl) return false;
+  // eBay derives total weight from both fields, so set oz first and let it
+  // commit before setting lb — otherwise lb's handler reads a stale oz and the
+  // total lands wrong (which is what triggered the flip-flop).
+  if (ozEl) setInput(ozEl, String(rem));
+  if (lbEl) setTimeout(() => setInput(lbEl, String(lb)), 150);
+  return true;
+};
+
 // Weight from the rendered page. Handles "2 lb 4 oz", "1.5 lbs", "12 oz",
 // and weight input fields. Returns total ounces.
 EPS.weightFromDom = function () {
