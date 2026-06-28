@@ -366,10 +366,14 @@ EPS.insuredValueFromDom = function () {
 };
 
 // Write a weight (in ounces) back into eBay's label form, split into the lb/oz
-// inputs. eBay's fields are framework-controlled, so a plain value assignment is
-// dropped — set via the native setter, then dispatch ONLY an "input" event.
-// eBay maps input->onChange; dispatching "change"/"blur" too re-enters its
-// handler and kicks off an infinite oz<->total reconciliation loop.
+// inputs, and get eBay to commit and re-price it. eBay's fields are
+// framework-controlled and only commit a value on a real focus change — so for
+// each field: focus, set the value via the native setter + an "input" event,
+// then call .blur() (the method — a genuine focus change). Dispatching "change"
+// or "blur" *events* does NOT commit and, combined, drives an infinite
+// oz<->total reconciliation loop; the .blur() method commits cleanly. eBay
+// derives the total from both fields, so commit oz first and let eBay recompute
+// before committing lb (otherwise lb reads a stale oz and the total lands wrong).
 function setInput(el, value) {
   const proto =
     el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
@@ -378,17 +382,26 @@ function setInput(el, value) {
   el.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function commitField(el, value) {
+  el.focus();
+  setInput(el, String(value));
+  await wait(120); // let the framework process the input before committing
+  el.blur();
+  await wait(800); // let eBay re-price before the next field
+}
+
 EPS.setWeightDom = function (oz) {
   const lb = Math.floor(oz / 16);
   const rem = Math.round((oz - lb * 16) * 10) / 10;
   const lbEl = document.querySelector('input[aria-label="Package weight in pounds"]');
   const ozEl = document.querySelector('input[aria-label="Package weight in ounces"]');
   if (!lbEl && !ozEl) return false;
-  // eBay derives total weight from both fields, so set oz first and let it
-  // commit before setting lb — otherwise lb's handler reads a stale oz and the
-  // total lands wrong (which is what triggered the flip-flop).
-  if (ozEl) setInput(ozEl, String(rem));
-  if (lbEl) setTimeout(() => setInput(lbEl, String(lb)), 150);
+  (async () => {
+    if (ozEl) await commitField(ozEl, rem);
+    if (lbEl) await commitField(lbEl, lb);
+  })();
   return true;
 };
 

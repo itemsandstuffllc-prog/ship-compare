@@ -218,7 +218,8 @@
         const oz = Number(bump.getAttribute("data-bump"));
         if (oz > 0 && EPS.setWeightDom(oz)) {
           lastShipmentKey = null; // force a fresh quote at the new weight
-          schedule();
+          // re-quote once eBay has committed both fields (~2s of focus/blur)
+          setTimeout(schedule, 2000);
         }
       };
       bump.onclick = go;
