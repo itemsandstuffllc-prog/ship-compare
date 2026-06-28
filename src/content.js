@@ -158,7 +158,7 @@
     let sx, sy, ox, oy, dragging = false;
     function down(e) {
       if (e.target.closest(".eps-x")) return; // collapse button, not a drag
-      const head = e.target.closest(".eps-head");
+      const head = e.target.closest(".eps-bar, .eps-head");
       if (!head) return;
       dragging = true;
       const r = el.getBoundingClientRect();
@@ -196,11 +196,14 @@
 
   function header() {
     const mark = chrome.runtime.getURL("icons/icon128.png");
-    return `<div class="eps-head">
-        <img class="eps-mark" src="${mark}" alt="Items and Stuff" />
-        <span class="eps-title">eBay vs Pirate Ship</span>
+    return `<div class="eps-bar">
+        <span class="eps-bar-title">SHIP-COMPARE.EXE</span>
         <span class="eps-ver">v0.2.0</span>
         <button class="eps-x" aria-label="Collapse">\u00d7</button>
+      </div>
+      <div class="eps-head">
+        <img class="eps-mark" src="${mark}" alt="Items and Stuff" />
+        <span class="eps-title">eBay vs Pirate Ship</span>
       </div>`;
   }
 

@@ -53,6 +53,8 @@
   line-height: 1.45 !important;
   color: var(--eps-ink) !important;
   background: var(--eps-bg) !important;
+  margin: 0 !important;
+  padding: 0 !important; /* eBay bleeds 16px in; kill it so the header is flush */
   border: 2px solid var(--eps-border) !important;
   border-radius: 0 !important;
   box-shadow: var(--eps-shadow-panel) !important;
@@ -87,7 +89,75 @@
 
 #eps-panel * { box-sizing: border-box; }
 
-/* ---- header (drag handle) ---------------------------------------------- */
+/* ---- DOS-style title bar (drag handle) --------------------------------- */
+/* A retro app titlebar: black terminal strip, monospace caption, and classic
+   raised-bevel gray controls. The grays/bevels here are a deliberate period
+   look for this strip, not part of the product color system. */
+#eps-panel .eps-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 3px 4px 3px 8px !important;
+  background: #000000 !important;
+  color: #e6e6e6 !important;
+  border-bottom: 2px solid var(--eps-border) !important;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace !important;
+  cursor: grab;
+  user-select: none;
+}
+#eps-panel.eps-dragging .eps-bar { cursor: grabbing; }
+#eps-panel .eps-bar-title {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #e6e6e6 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#eps-panel .eps-ver {
+  font-family: ui-monospace, Consolas, "Courier New", monospace !important;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #000000;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff; /* raised bevel */
+  padding: 0 5px;
+  line-height: 15px;
+}
+#eps-panel .eps-x {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  font-family: ui-monospace, Consolas, "Courier New", monospace !important;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  color: #000000;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff; /* raised bevel */
+}
+#eps-panel .eps-x:hover { background: #d6d6d6; }
+#eps-panel .eps-x:active {
+  border-color: #808080 #ffffff #ffffff #808080; /* pressed-in bevel */
+}
+#eps-panel .eps-x:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+/* ---- header (brand bar) ------------------------------------------------- */
 #eps-panel .eps-head {
   display: flex;
   align-items: center;
@@ -124,39 +194,6 @@
   flex: 1;
 }
 
-#eps-panel .eps-ver {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #000000;
-  background: #ffffff;
-  border: 2px solid #000000;
-  padding: 1px 5px;
-}
-
-#eps-panel .eps-x {
-  all: unset;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1;
-  color: #000000;
-  background: #ffffff;
-  border: 2px solid #000000;
-  transition: all 0.1s;
-}
-#eps-panel .eps-x:hover {
-  background: #000000;
-  color: var(--eps-brand);
-}
-#eps-panel .eps-x:focus-visible {
-  outline: 3px solid #000000;
-  outline-offset: 2px;
-}
 
 /* ---- body -------------------------------------------------------------- */
 #eps-panel .eps-body {
