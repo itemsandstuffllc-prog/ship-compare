@@ -107,7 +107,7 @@
       renderFallback(shipment, reason);
       return;
     }
-    renderResult(shipment, resp.rates);
+    renderResult(shipment, resp.rates, resp.weightHack);
   }
 
   // ---- panel mount ---------------------------------------------------------
@@ -355,7 +355,24 @@
     wire(el);
   }
 
-  function renderResult(s, rates) {
+  function lbLabel(oz) {
+    const lb = oz / 16;
+    return (Number.isInteger(lb) ? lb : lb.toFixed(1)) + " lb";
+  }
+
+  // USPS Ground Advantage weight-band quirk: declaring a heavier weight can be
+  // cheaper. Shown only when it beats the current best rate.
+  function hackBlock(weightHack, cheapest) {
+    if (!weightHack || weightHack.price >= cheapest.totalPrice - 0.005) return "";
+    const saving = cheapest.totalPrice - weightHack.price;
+    return `<div class="eps-hack">
+        <span class="eps-hack-tag">USPS trick</span>
+        Mark it <b>${lbLabel(weightHack.toOz)}</b> for Ground Advantage at
+        ${money(weightHack.price)} <span class="eps-hack-save">— save ${money(saving)}</span>
+      </div>`;
+  }
+
+  function renderResult(s, rates, weightHack) {
     const el = panel();
     if (!rates.length) {
       renderFallback(s, "Pirate Ship returned no rates for this package.");
@@ -395,6 +412,7 @@
         ${addonNote(s)}
         <div class="eps-sub">Pirate Ship postage</div>
         ${rows}
+        ${hackBlock(weightHack, cheapest)}
         ${delta}
         <button class="eps-link" data-copy>Open in Pirate Ship</button>
       </div>`;
