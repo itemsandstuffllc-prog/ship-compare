@@ -197,7 +197,7 @@
   function header() {
     const mark = chrome.runtime.getURL("icons/icon128.png");
     return `<div class="eps-bar">
-        <span class="eps-bar-title">SHIP-COMPARE.EXE</span>
+        <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
         <span class="eps-ver">v0.2.0</span>
         <button class="eps-x" aria-label="Collapse">\u00d7</button>
       </div>
@@ -257,14 +257,39 @@
 
   let pendingCopy = "";
   let pendingOrderId = null;
+  let pendingPkg = null;
+
+  function rememberHandoff(s) {
+    pendingOrderId = s.orderId || null;
+    pendingPkg = { len: s.len, wid: s.wid, hei: s.hei, weightOz: s.weightOz };
+  }
+
+  // Stash the package data so the Pirate Ship content script can fill the
+  // weight and dimensions that PS's eBay import leaves blank.
+  function stashHandoff() {
+    try {
+      chrome.storage.local.set({
+        eps_handoff: {
+          orderId: pendingOrderId,
+          len: (pendingPkg && pendingPkg.len) || null,
+          wid: (pendingPkg && pendingPkg.wid) || null,
+          hei: (pendingPkg && pendingPkg.hei) || null,
+          weightOz: (pendingPkg && pendingPkg.weightOz) || null,
+          ts: Date.now(),
+        },
+      });
+    } catch {}
+  }
 
   // With an eBay order id we deep-link into Pirate Ship's eBay-import grid,
   // already filtered to this order \u2014 the seller clicks "Get Rates" and the
-  // address and order details are pre-filled by PS's native import. Without one
-  // (older label surfaces), fall back to copying the address and opening a
-  // blank ship page.
+  // address and order details are pre-filled by PS's native import; our PS
+  // content script then fills the weight and size. Without an order id (older
+  // label surfaces), fall back to copying the address and opening a blank ship
+  // page.
   function handoff(btn) {
     if (pendingOrderId) {
+      stashHandoff();
       window.open(PS_IMPORT + encodeURIComponent(pendingOrderId), "_blank", "noopener");
       return;
     }
@@ -281,9 +306,9 @@
 
   function copyBlock(s, label) {
     pendingCopy = clipboardText(s);
-    pendingOrderId = s.orderId || null;
+    rememberHandoff(s);
     const note = pendingOrderId
-      ? "Opens this order in Pirate Ship \u2014 address and order details are filled in by its eBay import."
+      ? "Opens this order in Pirate Ship \u2014 address from its eBay import, weight and size filled in for you."
       : "Copies the address and opens Pirate Ship. Insurance and signature already match your eBay selections.";
     return `<button class="eps-btn" data-copy>${label}</button>
       <div class="eps-note">${note}</div>`;
@@ -375,7 +400,7 @@
       </div>`;
     wire(el);
     pendingCopy = clipboardText(s);
-    pendingOrderId = s.orderId || null;
+    rememberHandoff(s);
   }
 
   // first pass shortly after load in case data was server-rendered

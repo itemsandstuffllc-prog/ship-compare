@@ -34,6 +34,11 @@
       "css": ["src/panel.css"],
       "run_at": "document_start",
       "world": "ISOLATED"
+    },
+    {
+      "matches": ["https://ship.pirateship.com/*"],
+      "js": ["src/pirateship.js"],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
