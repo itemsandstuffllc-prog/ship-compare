@@ -60,6 +60,13 @@
     return /\/print(\/|$)|\/sl\/prnt/i.test(location.pathname);
   }
 
+  // "Get labels in bulk" combine page. It lists one row per shipment; the panel
+  // describes a single shipment, so only compare when exactly one row is in view
+  // (i.e. orders combined into one). Otherwise the readers would mix rows.
+  function isBulkPage() {
+    return /\/ship\/bulk/i.test(location.pathname);
+  }
+
   function removePanel() {
     const el = document.getElementById("eps-panel");
     if (el) el.remove();
@@ -70,6 +77,17 @@
     if (isPrintPage()) {
       removePanel();
       return;
+    }
+    if (isBulkPage()) {
+      const rows = EPS.bulkRowCount();
+      if (rows !== 1) {
+        renderNote(
+          rows > 1
+            ? `Combine these ${rows} orders into one shipment to compare.`
+            : "Open a shipping label to compare postage."
+        );
+        return;
+      }
     }
     const shipment = EPS.extractFromCaptures(captures) || EPS.extractFromDom() || {};
 
@@ -114,8 +132,10 @@
     if (cost != null) shipment.ebayCost = cost;
 
     // The join key into Pirate Ship's native eBay import - lets the handoff land
-    // on this exact order instead of a blank ship page.
-    shipment.orderId = EPS.orderIdFromPage();
+    // on this exact order instead of a blank ship page. Skipped for combined
+    // shipments: one label covers two orders, so a single-order deep link (and
+    // its tracking-back) would be wrong - fall back to the manual copy.
+    shipment.orderId = isBulkPage() ? null : EPS.orderIdFromPage();
 
     // Mirror eBay's signature / liability-coverage selections so the Pirate
     // Ship quote is like-for-like. background.js folds these into the rate.
@@ -254,7 +274,7 @@
       : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
-        <span class="eps-ver">v0.3.3</span>
+        <span class="eps-ver">v0.3.4</span>
         <button class="eps-min" aria-label="Minimize">-</button>
         <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>
@@ -318,6 +338,13 @@
     if (document.getElementById("eps-panel")) return; // don't clobber a result
     const el = panel();
     el.innerHTML = header() + `<div class="eps-body eps-muted">Open a shipping label to compare postage.</div>`;
+    wire(el);
+  }
+
+  // A standalone message in the panel (e.g. the bulk combine prompt).
+  function renderNote(msg) {
+    const el = panel();
+    el.innerHTML = header() + `<div class="eps-body eps-muted">${msg}</div>`;
     wire(el);
   }
 

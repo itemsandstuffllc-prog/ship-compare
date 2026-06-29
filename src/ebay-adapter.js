@@ -256,10 +256,21 @@ function labelValue(labelRe, notRe) {
 // Returns { zip, region } using the 5-digit ZIP (drops the +4).
 EPS.originFromDom = function () {
   const v = labelValue(/ship\s*from|return\s*to/i, null);
-  const zip = pickZip(v);
-  if (!zip) return { zip: null, region: null };
-  const region = (v.match(/\b([A-Z]{2})\b(?=\s*\d{5})/) || [])[1] || null;
-  return { zip, region };
+  let zip = pickZip(v);
+  let region = zip ? (v.match(/\b([A-Z]{2})\b(?=\s*\d{5})/) || [])[1] || null : null;
+  if (!zip) {
+    // bulk "Get labels in bulk" rows print the origin as "... from 43213-2131".
+    const m = (document.body.innerText || "").match(/\bfrom\s+(\d{5})(?:-\d{4})?/i);
+    if (m) zip = m[1];
+  }
+  return { zip: zip || null, region };
+};
+
+// How many shipment rows the bulk page is showing (each has its own lb input).
+// 0 on non-bulk pages. Used to only compare when a single combined shipment is
+// in view, since the panel describes one shipment at a time.
+EPS.bulkRowCount = function () {
+  return document.querySelectorAll('input[aria-label="lb"]').length;
 };
 
 // Destination ZIP from the "Ship to" block. If no labeled block is found,
@@ -287,11 +298,17 @@ EPS.dimsFromDom = function () {
     return Number.isNaN(n) ? null : n;
   };
   const len =
-    v('input[name="dimensions.length"]') ?? v('input[aria-label="Package length in inches"]');
+    v('input[name="dimensions.length"]') ??
+    v('input[aria-label="Package length in inches"]') ??
+    v('input[name="dim-length"]'); // bulk "Get labels in bulk" page
   const wid =
-    v('input[name="dimensions.width"]') ?? v('input[aria-label="Package width in inches"]');
+    v('input[name="dimensions.width"]') ??
+    v('input[aria-label="Package width in inches"]') ??
+    v('input[name="dim-width"]');
   const hei =
-    v('input[name="dimensions.height"]') ?? v('input[aria-label="Package height in inches"]');
+    v('input[name="dimensions.height"]') ??
+    v('input[aria-label="Package height in inches"]') ??
+    v('input[name="dim-height"]');
   if (len || wid || hei) return { len, wid, hei };
   return null;
 };
@@ -395,8 +412,13 @@ async function commitField(el, value) {
 EPS.setWeightDom = function (oz) {
   const lb = Math.floor(oz / 16);
   const rem = Math.round((oz - lb * 16) * 10) / 10;
-  const lbEl = document.querySelector('input[aria-label="Package weight in pounds"]');
-  const ozEl = document.querySelector('input[aria-label="Package weight in ounces"]');
+  // single-label page aria labels, falling back to the bulk page's "lb"/"oz".
+  const lbEl =
+    document.querySelector('input[aria-label="Package weight in pounds"]') ||
+    document.querySelector('input[aria-label="lb"]');
+  const ozEl =
+    document.querySelector('input[aria-label="Package weight in ounces"]') ||
+    document.querySelector('input[aria-label="oz"]');
   if (!lbEl && !ozEl) return false;
   (async () => {
     if (ozEl) await commitField(ozEl, rem);
@@ -420,6 +442,13 @@ EPS.weightFromDom = function () {
     const t = (albs || 0) * 16 + (aoz || 0);
     if (t > 0) return t;
   }
+  // 0b) bulk "Get labels in bulk" rows tag the weight inputs aria "lb"/"oz".
+  const blb = aria("lb");
+  const boz = aria("oz");
+  if (blb !== undefined || boz !== undefined) {
+    const t = (blb || 0) * 16 + (boz || 0);
+    if (t > 0) return t;
+  }
   // 1) explicit lb/oz input fields
   const inputs = document.querySelectorAll("input, select");
   let lb, oz;
@@ -434,8 +463,9 @@ EPS.weightFromDom = function () {
     const t = (lb || 0) * 16 + (oz || 0);
     if (t > 0) return t;
   }
-  // 2) text patterns near a weight label
-  const text = document.body.innerText;
+  // 2) text patterns near a weight label. Drop "Max weight 70 lb ..." hint text
+  // first so it isn't mistaken for the package weight (the bulk page shows it).
+  const text = (document.body.innerText || "").replace(/max\s+weight[^\n]*/gi, "");
   let m = text.match(/(\d+(?:\.\d+)?)\s*lb[s]?\s*(?:(\d+(?:\.\d+)?)\s*oz)?/i);
   if (m) {
     const t = parseFloat(m[1]) * 16 + (m[2] ? parseFloat(m[2]) : 0);
