@@ -53,8 +53,24 @@
     ].join("|");
   }
 
+  // Post-purchase "label is ready to print" / print surfaces. The label is
+  // already bought and there's no ship-from/weight form to read, so the
+  // comparison is moot — never show the panel here.
+  function isPrintPage() {
+    return /\/print(\/|$)|\/sl\/prnt/i.test(location.pathname);
+  }
+
+  function removePanel() {
+    const el = document.getElementById("eps-panel");
+    if (el) el.remove();
+  }
+
   async function tryCompare() {
     if (!alive()) return;
+    if (isPrintPage()) {
+      removePanel();
+      return;
+    }
     const shipment = EPS.extractFromCaptures(captures) || EPS.extractFromDom() || {};
 
     // The label form on the page is the source of truth for what's being
@@ -222,7 +238,7 @@
       : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
-        <span class="eps-ver">v0.3.0</span>
+        <span class="eps-ver">v0.3.1</span>
         <button class="eps-min" aria-label="Minimize">-</button>
         <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>
@@ -493,6 +509,23 @@
     pendingCopy = clipboardText(s);
     rememberHandoff(s);
   }
+
+  // eBay's label flow is a single-page app, so navigating (e.g. to the print
+  // page after buying) doesn't reload this script. Watch for URL changes and
+  // re-evaluate — tryCompare drops the panel on print pages and rebuilds it
+  // elsewhere.
+  let lastUrl = location.href;
+  setInterval(() => {
+    if (!alive()) return;
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      if (isPrintPage()) removePanel();
+      else {
+        lastShipmentKey = null;
+        schedule();
+      }
+    }
+  }, 600);
 
   // first pass shortly after load in case data was server-rendered
   setTimeout(schedule, 1200);
