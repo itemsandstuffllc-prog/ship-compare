@@ -238,7 +238,7 @@
       : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
-        <span class="eps-ver">v0.3.1</span>
+        <span class="eps-ver">v0.3.2</span>
         <button class="eps-min" aria-label="Minimize">-</button>
         <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>

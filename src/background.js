@@ -55,8 +55,16 @@ const FLAT_RATE = new Set([
 // PS requires every non-flat-rate parcel to clear the minimum label size
 // (6x3x0.25). Below that, or with dims missing, it returns no rates at all --
 // it does not fall back to weight-only pricing for a Parcel.
+//
+// eBay's L/W/H fields aren't ordered (you might type the longest side as
+// "width"), and PS prices the same regardless of order, so compare against the
+// minimum orientation-independently: longest >= 6, middle >= 3, thinnest >=
+// 0.25. Otherwise a valid box like 4x6x4 gets wrongly rejected.
 function hasValidDims(s) {
-  return s.len >= 6 && s.wid >= 3 && s.hei >= 0.25;
+  const dims = [s.len, s.wid, s.hei].map(Number).filter((n) => n > 0);
+  if (dims.length < 3) return false;
+  dims.sort((a, b) => b - a);
+  return dims[0] >= 6 && dims[1] >= 3 && dims[2] >= 0.25;
 }
 
 function safeDims(s, packageType) {
