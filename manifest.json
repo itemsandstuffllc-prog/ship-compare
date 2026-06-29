@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "eBay \u2194 Pirate Ship Compare",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Compares the eBay label price against live Pirate Ship postage on the shipping-label page, with a one-click handoff to confirm insurance and signature savings.",
   "permissions": ["clipboardWrite", "storage"],
   "host_permissions": [

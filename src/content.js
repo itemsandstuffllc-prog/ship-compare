@@ -137,6 +137,11 @@
     // its tracking-back) would be wrong - fall back to the manual copy.
     shipment.orderId = isBulkPage() ? null : EPS.orderIdFromPage();
 
+    // A combined shipment (one label covering two orders) shows an "Undo
+    // combine" control. Flag it so the panel can explain the tracking options.
+    shipment.combined =
+      isBulkPage() && /undo\s+combine/i.test(document.body.innerText || "");
+
     // Mirror eBay's signature / liability-coverage selections so the Pirate
     // Ship quote is like-for-like. background.js folds these into the rate.
     shipment.deliveryConfirmation = EPS.signatureFromDom();
@@ -274,7 +279,7 @@
       : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
-        <span class="eps-ver">v0.3.4</span>
+        <span class="eps-ver">v0.3.5</span>
         <button class="eps-min" aria-label="Minimize">-</button>
         <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>
@@ -475,6 +480,7 @@
       header() +
       `<div class="eps-body">
         <div class="eps-row"><span>eBay label</span><b>${money(s.ebayCost)}</b></div>
+        ${comboNote(s)}
         <div class="eps-warn">${reason}</div>
         ${diag(s)}
         ${copyBlock(s, "Copy for Pirate Ship")}
@@ -485,6 +491,17 @@
   function lbLabel(oz) {
     const lb = oz / 16;
     return (Number.isInteger(lb) ? lb : lb.toFixed(1)) + " lb";
+  }
+
+  // Combined shipments can't be handed to Pirate Ship as one order, so explain
+  // the two ways to ship them and what each means for eBay tracking.
+  function comboNote(s) {
+    if (!s.combined) return "";
+    return `<div class="eps-combo">
+        <b>Combined order:</b> one label covers both. Buy on eBay so the tracking
+        posts to both orders automatically, or buy one Pirate Ship label and add
+        its tracking to the other order by hand.
+      </div>`;
   }
 
   // USPS Ground Advantage weight-band quirk: declaring a heavier weight can be
@@ -541,6 +558,7 @@
       header() +
       `<div class="eps-body">
         <div class="eps-row"><span>eBay label</span><b>${money(s.ebayCost)}</b></div>
+        ${comboNote(s)}
         ${addonNote(s)}
         <div class="eps-sub">Pirate Ship postage</div>
         ${rows}
