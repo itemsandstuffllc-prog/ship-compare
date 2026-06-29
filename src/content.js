@@ -92,6 +92,22 @@
       shipment.wid = dims.wid;
       shipment.hei = dims.hei;
     }
+
+    // eBay carries a 1x1x1 placeholder when the seller never set real
+    // dimensions, which is below the carrier minimum and makes Pirate Ship
+    // refuse to quote. When all three dims are present but under the minimum,
+    // raise them to the smallest size PS will quote (longest 6, middle 3,
+    // thinnest 1) so we still return a baseline. Order doesn't affect pricing.
+    if (shipment.len > 0 && shipment.wid > 0 && shipment.hei > 0) {
+      const d = [shipment.len, shipment.wid, shipment.hei].map(Number).sort((a, b) => b - a);
+      if (!(d[0] >= 6 && d[1] >= 3 && d[2] >= 0.25)) {
+        shipment.len = Math.max(d[0], 6);
+        shipment.wid = Math.max(d[1], 3);
+        shipment.hei = Math.max(d[2], 1);
+        shipment.dimsBumped = true;
+      }
+    }
+
     const svc = EPS.serviceFromDom();
     if (svc) shipment.service = svc;
     const cost = EPS.ebayCostFromDom();
@@ -238,7 +254,7 @@
       : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
-        <span class="eps-ver">v0.3.2</span>
+        <span class="eps-ver">v0.3.3</span>
         <button class="eps-min" aria-label="Minimize">-</button>
         <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>
@@ -501,6 +517,11 @@
         ${addonNote(s)}
         <div class="eps-sub">Pirate Ship postage</div>
         ${rows}
+        ${
+          s.dimsBumped
+            ? `<div class="eps-note">Sized up to ${s.len}×${s.wid}×${s.hei} in (eBay dimensions were below the carrier minimum).</div>`
+            : ""
+        }
         ${hackBlock(weightHack, cheapest)}
         ${delta}
         <button class="eps-link" data-copy>Open in Pirate Ship</button>
