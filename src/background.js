@@ -104,7 +104,7 @@ function cheapestGA(rates) {
 
 // USPS Ground Advantage has weight-band quirks where a light parcel can cost
 // MORE than a heavier one. For light parcels, re-quote GA at 3/4/5 lb (declaring
-// a heavier weight than actual is allowed — you just pay for the bigger label)
+// a heavier weight than actual is allowed - you just pay for the bigger label)
 // and return the cheapest bump, if any. Caller compares it to the real price.
 const BUMP_WEIGHTS_OZ = [48, 64, 80]; // 3, 4, 5 lb
 const LIGHT_THRESHOLD_OZ = 48; // only worth checking under 3 lb

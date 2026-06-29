@@ -367,9 +367,9 @@ EPS.insuredValueFromDom = function () {
 
 // Write a weight (in ounces) back into eBay's label form, split into the lb/oz
 // inputs, and get eBay to commit and re-price it. eBay's fields are
-// framework-controlled and only commit a value on a real focus change — so for
+// framework-controlled and only commit a value on a real focus change - so for
 // each field: focus, set the value via the native setter + an "input" event,
-// then call .blur() (the method — a genuine focus change). Dispatching "change"
+// then call .blur() (the method - a genuine focus change). Dispatching "change"
 // or "blur" *events* does NOT commit and, combined, drives an infinite
 // oz<->total reconciliation loop; the .blur() method commits cleanly. eBay
 // derives the total from both fields, so commit oz first and let eBay recompute

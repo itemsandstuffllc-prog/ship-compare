@@ -1,7 +1,7 @@
 /* Neobrutalism comparison panel. Scoped hard to #eps-panel so eBay's global
    CSS can't bleed in and vice versa. The look: thick black outlines, hard
    offset shadows with no blur, zero radius, and one loud brand accent. Tokens
-   resolve light/dark automatically via prefers-color-scheme — never swap colors
+   resolve light/dark automatically via prefers-color-scheme - never swap colors
    by hand. */
 
 #eps-panel {
@@ -23,7 +23,7 @@
   --eps-disabled: #f5f5f5;
   --eps-sk-sheen: rgba(0, 0, 0, 0.09);
 
-  /* type tokens — declared with strong system fallbacks because the page's CSP
+  /* type tokens - declared with strong system fallbacks because the page's CSP
      may block remote webfonts in a content script. */
   --eps-font-head: "Archivo Black", "Arial Black", Impact, sans-serif;
   --eps-font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -133,7 +133,8 @@
   padding: 0 5px;
   line-height: 15px;
 }
-#eps-panel .eps-x {
+#eps-panel .eps-x,
+#eps-panel .eps-min {
   all: unset;
   box-sizing: border-box;
   cursor: pointer;
@@ -150,11 +151,14 @@
   border: 2px solid;
   border-color: #ffffff #808080 #808080 #ffffff; /* raised bevel */
 }
-#eps-panel .eps-x:hover { background: #d6d6d6; }
-#eps-panel .eps-x:active {
+#eps-panel .eps-x:hover,
+#eps-panel .eps-min:hover { background: #d6d6d6; }
+#eps-panel .eps-x:active,
+#eps-panel .eps-min:active {
   border-color: #808080 #ffffff #ffffff #808080; /* pressed-in bevel */
 }
-#eps-panel .eps-x:focus-visible {
+#eps-panel .eps-x:focus-visible,
+#eps-panel .eps-min:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 1px;
 }
@@ -263,7 +267,7 @@
   white-space: nowrap;
   color: var(--eps-ink);
 }
-/* cheapest option — loud brand stripe */
+/* cheapest option - loud brand stripe */
 #eps-panel .eps-rate.eps-best {
   background: var(--eps-brand) !important;
 }
@@ -280,7 +284,7 @@
 /* ---- skeleton loader --------------------------------------------------- */
 /* Mirrors the result layout (rate list + a footer callout block) so the panel
    doesn't jump when real rates land. Hard-edged bars with a sweeping sheen keep
-   the neobrutalism feel — no soft pulsing. */
+   the neobrutalism feel - no soft pulsing. */
 @keyframes eps-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -358,7 +362,7 @@
   font-size: 12.5px;
 }
 
-/* Weight-bump tip — black-bordered brand fill, clickable, with a pulsing glow
+/* Weight-bump tip - black-bordered brand fill, clickable, with a pulsing glow
    and a twinkling sparkle to flag the saving. Clicking sets the eBay weight. */
 @keyframes eps-hack-glow {
   0%, 100% { box-shadow: var(--eps-shadow-xs), 0 0 0 0 rgba(255, 204, 0, 0); }
@@ -455,7 +459,7 @@
   outline-offset: 2px;
 }
 
-/* result CTA — dark variant so it reads as the primary action there. Sized to
+/* result CTA - dark variant so it reads as the primary action there. Sized to
    its label and centered rather than stretched full width. */
 #eps-panel .eps-link {
   all: unset;
@@ -518,5 +522,8 @@
 }
 #eps-panel .eps-miss { color: var(--eps-warning-ink); font-weight: 700; font-style: normal; }
 
-/* collapsed: keep the draggable header, hide the rest */
+/* minimized: keep the toolbar + brand bar, hide the body */
 #eps-panel.eps-collapsed .eps-body { display: none; }
+/* closed-to-toolbar: keep only the DOS title bar */
+#eps-panel.eps-baronly .eps-body { display: none; }
+#eps-panel.eps-baronly .eps-head { display: none; }

@@ -6,12 +6,32 @@
   const DEBUG = () => window.EPS_DEBUG === true;
   const log = (...a) => DEBUG() && console.log("[EPS]", ...a);
 
+  // After the extension is reloaded/updated, content scripts already injected in
+  // open tabs keep running but lose their connection - any chrome.* call then
+  // throws "Extension context invalidated". Guard the entry points and bail
+  // quietly until the page is refreshed and a fresh script takes over.
+  const alive = () => {
+    try {
+      return !!(chrome.runtime && chrome.runtime.id);
+    } catch {
+      return false;
+    }
+  };
+  const extURL = (p) => {
+    try {
+      return chrome.runtime.getURL(p);
+    } catch {
+      return "";
+    }
+  };
+
   const captures = [];
   let lastShipmentKey = null;
   let debounceTimer = null;
 
   // collect network payloads from the MAIN-world interceptor
   window.addEventListener("message", (e) => {
+    if (!alive()) return;
     if (e.source !== window) return;
     const d = e.data;
     if (!d || d.source !== "EPS_NET") return;
@@ -34,6 +54,7 @@
   }
 
   async function tryCompare() {
+    if (!alive()) return;
     const shipment = EPS.extractFromCaptures(captures) || EPS.extractFromDom() || {};
 
     // The label form on the page is the source of truth for what's being
@@ -60,7 +81,7 @@
     const cost = EPS.ebayCostFromDom();
     if (cost != null) shipment.ebayCost = cost;
 
-    // The join key into Pirate Ship's native eBay import — lets the handoff land
+    // The join key into Pirate Ship's native eBay import - lets the handoff land
     // on this exact order instead of a blank ship page.
     shipment.orderId = EPS.orderIdFromPage();
 
@@ -157,7 +178,7 @@
   function enableDrag(el) {
     let sx, sy, ox, oy, dragging = false;
     function down(e) {
-      if (e.target.closest(".eps-x")) return; // collapse button, not a drag
+      if (e.target.closest(".eps-x, .eps-min")) return; // toolbar buttons, not a drag
       const head = e.target.closest(".eps-bar, .eps-head");
       if (!head) return;
       dragging = true;
@@ -191,25 +212,54 @@
   }
 
   function money(n) {
-    return n == null ? "\u2014" : "$" + Number(n).toFixed(2);
+    return n == null ? "-" : "$" + Number(n).toFixed(2);
   }
 
   function header() {
-    const mark = chrome.runtime.getURL("icons/icon128.png");
+    const mark = extURL("icons/icon128.png");
+    const img = mark
+      ? `<img class="eps-mark" src="${mark}" alt="Items and Stuff" />`
+      : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
         <span class="eps-ver">v0.2.0</span>
-        <button class="eps-x" aria-label="Collapse">\u00d7</button>
+        <button class="eps-min" aria-label="Minimize">-</button>
+        <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>
       <div class="eps-head">
-        <img class="eps-mark" src="${mark}" alt="Items and Stuff" />
+        ${img}
         <span class="eps-title">eBay vs Pirate Ship</span>
       </div>`;
   }
 
+  // Keep the minimize glyph in sync with the fold state (rebuilt on each render).
+  function syncControls(el) {
+    const min = el.querySelector(".eps-min");
+    if (!min) return;
+    const folded =
+      el.classList.contains("eps-collapsed") || el.classList.contains("eps-baronly");
+    min.textContent = folded ? "+" : "-";
+    min.setAttribute("aria-label", folded ? "Expand" : "Minimize");
+  }
+
   function wire(el) {
+    // Minimize folds to the toolbar + brand bar; Close folds to just the
+    // toolbar. Either button restores from any folded state.
+    const min = el.querySelector(".eps-min");
+    if (min)
+      min.onclick = () => {
+        el.classList.remove("eps-baronly");
+        el.classList.toggle("eps-collapsed");
+        syncControls(el);
+      };
     const x = el.querySelector(".eps-x");
-    if (x) x.onclick = () => el.classList.toggle("eps-collapsed");
+    if (x)
+      x.onclick = () => {
+        el.classList.remove("eps-collapsed");
+        el.classList.toggle("eps-baronly");
+        syncControls(el);
+      };
+    syncControls(el);
     const copy = el.querySelector("[data-copy]");
     if (copy) copy.onclick = () => handoff(copy);
     const bump = el.querySelector("[data-bump]");
@@ -326,7 +376,7 @@
     pendingCopy = clipboardText(s);
     rememberHandoff(s);
     const note = pendingOrderId
-      ? "Opens this order in Pirate Ship \u2014 address from its eBay import, weight and size filled in for you."
+      ? "Opens this order in Pirate Ship with the address, weight, and size already filled in."
       : "Copies the address and opens Pirate Ship. Insurance and signature already match your eBay selections.";
     return `<button class="eps-btn" data-copy>${label}</button>
       <div class="eps-note">${note}</div>`;
@@ -389,8 +439,8 @@
     return `<div class="eps-hack" role="button" tabindex="0" data-bump="${weightHack.toOz}"
         aria-label="Set the eBay weight to ${w} to save ${money(saving)} on Ground Advantage">
         <span class="eps-hack-tag"><span class="eps-spark">✨</span> Bump &amp; Save</span>
-        Mark it <b>${w}</b> for Ground Advantage at ${money(weightHack.price)}
-        <span class="eps-hack-save">— save ${money(saving)}</span>
+        Mark it <b>${w}</b> for Ground Advantage at ${money(weightHack.price)},
+        <span class="eps-hack-save">save ${money(saving)}</span>
         <span class="eps-hack-cta">Tap to set eBay weight to ${w} →</span>
       </div>`;
   }
