@@ -47,7 +47,7 @@ EPS.CLASS_LABELS = {
 
 // --- eBay order id ----------------------------------------------------------
 // eBay order/record ids are formatted NN-NNNNN-NNNNN. On the single-label page
-// it sits right in the URL (/ship/single/22-14795-38876); other label surfaces
+// it sits right in the URL (/ship/single/12-34567-89012); other label surfaces
 // carry it in a query param or somewhere in the rendered page. This is the join
 // key into Pirate Ship's native eBay import, so the panel can hand the seller
 // straight to the matching order instead of a blank ship page.
@@ -108,7 +108,7 @@ function firstZip(obj, keyRe) {
 }
 
 // Pick the postal ZIP out of an address blob. A US street address often leads
-// with a 5-digit house number ("11913 Park Ave ... FL 33584-5229"), so a naive
+// with a 5-digit house number ("12345 Main St ... TX 75001-1234"), so a naive
 // first-match grabs the wrong number. Prefer, in order: a ZIP+4, a 5-digit run
 // right after a 2-letter state code, then the last bare 5-digit run.
 function pickZip(text) {
@@ -252,7 +252,7 @@ function labelValue(labelRe, notRe) {
 }
 
 // --- origin (Ship from / Return to) from the page -------------------------
-// e.g. heading "Ship from / Return to" -> "Columbus OH 43213-2131".
+// e.g. heading "Ship from / Return to" -> "Austin TX 78701-1234".
 // Returns { zip, region } using the 5-digit ZIP (drops the +4).
 EPS.originFromDom = function () {
   const v = labelValue(/ship\s*from|return\s*to/i, null);
