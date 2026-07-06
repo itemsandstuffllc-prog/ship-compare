@@ -1,4 +1,4 @@
-# eBay ↔ Pirate Ship Compare
+# Ship Compare for eBay + Pirate Ship
 
 Chrome extension (Manifest V3). On an eBay shipping-label page it reads the
 shipment, pulls live Pirate Ship postage, and shows a side-by-side panel with a
