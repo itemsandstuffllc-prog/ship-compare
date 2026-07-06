@@ -437,6 +437,28 @@
 @media (prefers-color-scheme: dark) {
   #eps-panel .eps-hack-cta { color: var(--eps-brand); }
 }
+#eps-panel .eps-hack-fine {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--eps-body);
+}
+
+/* federal-holiday closure banner */
+#eps-panel .eps-holiday {
+  margin: 0 0 10px;
+  padding: 9px 10px;
+  background: var(--eps-warning-soft) !important;
+  border: 2px solid var(--eps-warning-border) !important;
+  box-shadow: var(--eps-shadow-xs);
+  color: var(--eps-warning-ink) !important;
+  font-weight: 600;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
 
 /* ---- buttons ----------------------------------------------------------- */
 #eps-panel .eps-btn {
@@ -537,6 +559,3 @@
 
 /* minimized: keep the toolbar + brand bar, hide the body */
 #eps-panel.eps-collapsed .eps-body { display: none; }
-/* closed-to-toolbar: keep only the DOS title bar */
-#eps-panel.eps-baronly .eps-body { display: none; }
-#eps-panel.eps-baronly .eps-head { display: none; }

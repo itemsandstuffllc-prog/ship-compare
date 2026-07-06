@@ -28,6 +28,7 @@
   const captures = [];
   let lastShipmentKey = null;
   let debounceTimer = null;
+  let dismissed = false; // X was clicked; stay hidden until the page reloads
 
   // collect network payloads from the MAIN-world interceptor
   window.addEventListener("message", (e) => {
@@ -73,7 +74,7 @@
   }
 
   async function tryCompare() {
-    if (!alive()) return;
+    if (!alive() || dismissed) return;
     if (isPrintPage()) {
       removePanel();
       return;
@@ -273,13 +274,17 @@
   }
 
   function header() {
+    let ver = "";
+    try {
+      ver = "v" + chrome.runtime.getManifest().version;
+    } catch {}
     const mark = extURL("icons/icon128.png");
     const img = mark
       ? `<img class="eps-mark" src="${mark}" alt="Items and Stuff" />`
       : "";
     return `<div class="eps-bar">
         <span class="eps-bar-title">SHIP-COMPARE.TOOL</span>
-        <span class="eps-ver">v0.3.5</span>
+        <span class="eps-ver">${ver}</span>
         <button class="eps-min" aria-label="Minimize">-</button>
         <button class="eps-x" aria-label="Close">\u00d7</button>
       </div>
@@ -293,28 +298,25 @@
   function syncControls(el) {
     const min = el.querySelector(".eps-min");
     if (!min) return;
-    const folded =
-      el.classList.contains("eps-collapsed") || el.classList.contains("eps-baronly");
+    const folded = el.classList.contains("eps-collapsed");
     min.textContent = folded ? "+" : "-";
     min.setAttribute("aria-label", folded ? "Expand" : "Minimize");
   }
 
   function wire(el) {
-    // Minimize folds to the toolbar + brand bar; Close folds to just the
-    // toolbar. Either button restores from any folded state.
+    // Minimize folds to the toolbar + brand bar; Close removes the panel for
+    // the rest of the page visit (a reload brings it back).
     const min = el.querySelector(".eps-min");
     if (min)
       min.onclick = () => {
-        el.classList.remove("eps-baronly");
         el.classList.toggle("eps-collapsed");
         syncControls(el);
       };
     const x = el.querySelector(".eps-x");
     if (x)
       x.onclick = () => {
-        el.classList.remove("eps-collapsed");
-        el.classList.toggle("eps-baronly");
-        syncControls(el);
+        dismissed = true;
+        removePanel();
       };
     syncControls(el);
     const copy = el.querySelector("[data-copy]");
@@ -479,6 +481,7 @@
     el.innerHTML =
       header() +
       `<div class="eps-body">
+        ${holidayNote()}
         <div class="eps-row"><span>eBay label</span><b>${money(s.ebayCost)}</b></div>
         ${comboNote(s)}
         <div class="eps-warn">${reason}</div>
@@ -518,7 +521,61 @@
         Mark it <b>${w}</b> for Ground Advantage at ${money(weightHack.price)},
         <span class="eps-hack-save">save ${money(saving)}</span>
         <span class="eps-hack-cta">Tap to set eBay weight to ${w} →</span>
+        <span class="eps-hack-fine">Disclaimer: we can't confirm whether USPS will
+        adjust what you're charged after this change — use at your own discretion.</span>
       </div>`;
+  }
+
+  // ---- federal holiday notice ---------------------------------------------
+  // USPS is closed on federal holidays. Fixed-date holidays falling on a
+  // weekend are observed on the nearest weekday (Sat -> Friday, Sun -> Monday).
+  function nthWeekday(year, month, dow, n) {
+    const first = new Date(year, month, 1);
+    const offset = (dow - first.getDay() + 7) % 7;
+    return new Date(year, month, 1 + offset + (n - 1) * 7);
+  }
+  function lastWeekday(year, month, dow) {
+    const last = new Date(year, month + 1, 0);
+    return new Date(year, month, last.getDate() - ((last.getDay() - dow + 7) % 7));
+  }
+  function federalHolidays(year) {
+    const observed = (m, d, name) => {
+      const dt = new Date(year, m, d);
+      if (dt.getDay() === 6) dt.setDate(dt.getDate() - 1);
+      else if (dt.getDay() === 0) dt.setDate(dt.getDate() + 1);
+      return [dt, name];
+    };
+    return [
+      observed(0, 1, "New Year's Day"),
+      [nthWeekday(year, 0, 1, 3), "Martin Luther King Jr. Day"],
+      [nthWeekday(year, 1, 1, 3), "Presidents' Day"],
+      [lastWeekday(year, 4, 1), "Memorial Day"],
+      observed(5, 19, "Juneteenth"),
+      observed(6, 4, "Independence Day"),
+      [nthWeekday(year, 8, 1, 1), "Labor Day"],
+      [nthWeekday(year, 9, 1, 2), "Columbus Day"],
+      observed(10, 11, "Veterans Day"),
+      [nthWeekday(year, 10, 4, 4), "Thanksgiving Day"],
+      observed(11, 25, "Christmas Day"),
+    ];
+  }
+  function holidayNote() {
+    const today = new Date();
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const years = [...new Set([today.getFullYear(), tomorrow.getFullYear()])];
+    const sameDay = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+    for (const y of years) {
+      for (const [d, name] of federalHolidays(y)) {
+        const when = sameDay(d, today) ? "today" : sameDay(d, tomorrow) ? "tomorrow" : null;
+        if (when)
+          return `<div class="eps-holiday">The post office is closed ${when} for
+            ${name} — packages won't move until the next business day.</div>`;
+      }
+    }
+    return "";
   }
 
   function renderResult(s, rates, weightHack) {
@@ -557,6 +614,7 @@
     el.innerHTML =
       header() +
       `<div class="eps-body">
+        ${holidayNote()}
         <div class="eps-row"><span>eBay label</span><b>${money(s.ebayCost)}</b></div>
         ${comboNote(s)}
         ${addonNote(s)}
