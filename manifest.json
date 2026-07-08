@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Ship Compare for eBay + Pirate Ship",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "See live Pirate Ship postage next to your eBay label price, with a one-click handoff that carries over the order, weight, and size.",
   "permissions": ["clipboardWrite", "storage"],
   "host_permissions": [

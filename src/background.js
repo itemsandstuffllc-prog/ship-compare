@@ -100,11 +100,13 @@ async function runRates(variables, extra) {
 
 const GROUND_ADVANTAGE = "GroundAdvantage";
 
-// Lowest Ground Advantage total in a rates list (GA can return several cubic
-// tiers); null when GA isn't present.
+// Lowest Ground Advantage total in a rates list; null when GA isn't present.
+// Match by prefix: PS returns cubic-priced GA under its own key
+// ("GroundAdvantage_Cubic"), and for a cubic-eligible box that can be the
+// only GA row in the response.
 function cheapestGA(rates) {
   const ga = rates
-    .filter((r) => r.mailClassKey === GROUND_ADVANTAGE)
+    .filter((r) => typeof r.mailClassKey === "string" && r.mailClassKey.startsWith(GROUND_ADVANTAGE))
     .map((r) => r.totalPrice)
     .filter((n) => typeof n === "number");
   return ga.length ? Math.min(...ga) : null;
