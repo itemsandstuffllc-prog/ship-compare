@@ -508,12 +508,19 @@
   }
 
   // USPS Ground Advantage weight-band quirk: declaring a heavier weight can be
-  // cheaper. Shown only when it beats the current best rate. Clicking it writes
+  // cheaper. Shown only when it beats every option on the table — the best
+  // Pirate Ship rate AND the eBay label the seller is about to buy (e.g. a
+  // cheap Media Mail label already undercuts the bump). Clicking it writes
   // the bumped weight back into eBay's form, which re-quotes and also carries
   // through to the Pirate Ship prefill.
-  function hackBlock(weightHack, cheapest) {
-    if (!weightHack || weightHack.price >= cheapest.totalPrice - 0.005) return "";
-    const saving = cheapest.totalPrice - weightHack.price;
+  function hackBlock(s, weightHack, cheapest) {
+    if (!weightHack) return "";
+    const best = Math.min(
+      cheapest.totalPrice,
+      s.ebayCost != null ? s.ebayCost : Infinity
+    );
+    if (weightHack.price >= best - 0.005) return "";
+    const saving = best - weightHack.price;
     const w = lbLabel(weightHack.toOz);
     return `<div class="eps-hack" role="button" tabindex="0" data-bump="${weightHack.toOz}"
         aria-label="Set the eBay weight to ${w} to save ${money(saving)} on Ground Advantage">
@@ -625,7 +632,7 @@
             ? `<div class="eps-note">Sized up to ${s.len}×${s.wid}×${s.hei} in (eBay dimensions were below the carrier minimum).</div>`
             : ""
         }
-        ${hackBlock(weightHack, cheapest)}
+        ${hackBlock(s, weightHack, cheapest)}
         ${delta}
         <button class="eps-link" data-copy>Open in Pirate Ship</button>
       </div>`;
